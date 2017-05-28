@@ -33,12 +33,18 @@ bool USB::Error(String errorMessage){
 
 bool USB::Flush(unsigned short &bytesSent){
 	bytesSent = 0;
-	Serial.println(sendBufferCount);
-	while(sendBufferCount > UBC){
-		Serial.print("buffer over 63 : ");
-		Serial.println(sendBufferCount);
-		bytesLeft = sendBufferCount - UBC;
-		sendByteCount = bytesLeft > -1 ? UBC : UBC - bytesLeft;
+	//Serial.print("send buffer length : ");
+	//Serial.println(sendBufferCount);
+	while(sendBufferCount > 0){
+		if(sendBufferCount > 63){
+			sendByteCount = 63;
+		} else {
+			sendByteCount = sendBufferCount;
+		}
+		//Serial.print("buffer size : ");
+		//Serial.println(sendBufferCount);
+		Serial.print("send byte count : ");
+		Serial.println(sendByteCount);
 		sendBufferCount -= sendByteCount;
 		bytesSent += sendByteCount;	
 		outputBuffer[0] = bytesSent;
@@ -63,9 +69,9 @@ bool send(const char *data,unsigned short length){
 }
 
 bool USB::Send(const char *byte,unsigned short length){
+	if(length > sendBufferLength) return false;
 	StoreSendBufferData(byte,length);
 	if(autoflush){
-		Serial.print("flush");
 		Flush(bytesSent);
 	}
 	
